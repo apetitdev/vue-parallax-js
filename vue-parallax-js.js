@@ -16,7 +16,10 @@ parallaxjs.prototype = {
     el.style["ms" + prop] = value;
   },
   add: function add(el, binding) {
-    var value = binding.value;
+    var values = binding.expression.split(',');
+    var speed = values[0];
+    var minvalue = values.length > 1 ? parseFloat(values[1]) : undefined;
+    var up = values.length > 2 ? values[2] : undefined;
     var arg = binding.arg;
     var style = el.currentStyle || window.getComputedStyle(el);
 
@@ -27,8 +30,10 @@ parallaxjs.prototype = {
       el: el,
       initialOffsetTop: el.offsetTop + el.offsetParent.offsetTop - parseInt(style.marginTop),
       style: style,
-      value: value,
+      speed: speed,
       arg: arg,
+      up: up,
+      minvalue: minvalue,
       modifiers: binding.modifiers,
       clientHeight: height,
       count: 0
@@ -51,27 +56,25 @@ parallaxjs.prototype = {
     var windowWidth = window.innerWidth;
 
     this.items.map(function (item) {
+      if (item && item.minvalue > scrollTop) 
+        return;
       var pos = scrollTop + windowHeight;
       var elH = item.clientHeight;
-      // if (item.count > 50) {
-      //   item.count = 0;
-      //   elH = item.el.clientHeight || item.el.offsetHeight || item.el.scrollHeight
-      // }
-
 
       pos = pos - elH / 2;
       pos = pos - windowHeight / 2;
-      pos = pos * item.value;
+      pos = pos * item.speed;
 
       var offset = item.initialOffsetTop;
       offset = offset * -1;
-      offset = offset * item.value;
+      offset = offset * item.speed;
       pos = pos + offset;
 
       pos = pos.toFixed(2);
 
+      var direction = item.up === "'up'" ? -1 : 1;
       // item.count++
-      _this.setStyle(item, 'translateY(' + pos + 'px)');
+      _this.setStyle(item, 'translateY(' + direction*pos + 'px)');
     });
   }
 };
@@ -101,17 +104,6 @@ export default {
         p.add(el, binding);
         p.move(p);
       }
-    }
-    // unbind(el, binding) {
-    //   p.remove(el)
-    // }
-    // bind: parallaxjs.add(parallaxjs),
-    // update(value) {
-    //  parallaxjs.update(value)
-    // },
-    // update(el, binding) {
-    //   console.log("cup");
-    // },
-    );
+    });
   }
 };
